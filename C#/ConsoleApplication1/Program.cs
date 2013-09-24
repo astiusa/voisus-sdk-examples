@@ -212,6 +212,72 @@ namespace ConsoleApplication
             }
         }
 
+        public static void get_receive(String parameters)
+        {
+            if (!VRCC.Radio_IsReceiveEnabled_Bool(currentRadio))
+            {
+                Console.Write("Not ");
+            }
+            Console.WriteLine("Receiving");
+        }
+
+        public static void set_receive(String int_enabled)
+        {
+            if (int_enabled == null || int_enabled == "")
+            {
+                Console.WriteLine("Specify a receive enable mode for the current radio (1 for enabled 0 for not enabled)");
+                Console.WriteLine();
+
+                Console.Write("> ");
+                int_enabled = Console.ReadLine();
+            }
+            Int32 index = new Int32();
+            try
+            {
+                index = Convert.ToInt32(int_enabled);
+            }
+            catch (System.FormatException)
+            {
+                Console.WriteLine("Invalid argument: must be either 1 or 0");
+                return;
+            }
+            VRCC.Radio_SetReceiveEnabled(currentRadio, index);
+            Console.WriteLine("Receiving: " + Convert.ToBoolean(index));
+        }
+
+        public static void get_transmit(String parameters)
+        {
+            if (!VRCC.Radio_IsTransmitEnabled_Bool(currentRadio))
+            {
+                Console.Write("Not ");
+            }
+            Console.WriteLine("Transmitting");
+        }
+
+        public static void set_transmit(String int_enabled)
+        {
+            if (int_enabled == null || int_enabled == "")
+            {
+                Console.WriteLine("Specify a transmit enable mode for the current radio (1 for enabled 0 for not enabled)");
+                Console.WriteLine();
+
+                Console.Write("> ");
+                int_enabled = Console.ReadLine();
+            }
+            Int32 index = new Int32();
+            try
+            {
+                index = Convert.ToInt32(int_enabled);
+            }
+            catch (System.FormatException)
+            {
+                Console.WriteLine("Invalid argument: must be either 1 or 0");
+                return;
+            }
+            VRCC.Radio_SetTransmitEnabled(currentRadio, index);
+            Console.WriteLine("Transmitting: " + Convert.ToBoolean(index));
+        }
+
         public static void get_micmode(String parameters)
         {
             Console.WriteLine("Mic mode: " + VRCC.Headset_MicrophoneMode());
@@ -245,72 +311,29 @@ namespace ConsoleApplication
             Console.WriteLine("Setting mic mode: " + (MicMode_t)index);
         }
 
-        public static void get_receive(String parameters)
+        public static void set_ptt(String bool_push)
         {
-            Boolean receiving = Convert.ToBoolean(VRCC.Radio_IsReceiveEnabled(currentRadio));
-            if (!receiving)
+            if (bool_push == null || bool_push == "")
             {
-                Console.Write("Not ");
-            }
-            Console.WriteLine("Receiving");
-        }
-
-        public static void set_receive(String int_enabled)
-        {
-            if (int_enabled == null || int_enabled == "")
-            {
-                Console.WriteLine("Specify an enable mode (1 for enabled 0 for not enabled)");
+                Console.WriteLine("Specify a push to talk button state (true for pushed false for released):");
                 Console.WriteLine();
-
-                Console.Write("> ");
-                int_enabled = Console.ReadLine();
             }
-            Int32 index = new Int32();
+
+            Boolean push = new Boolean();
+
             try
             {
-                index = Convert.ToInt32(int_enabled);
+                push = Convert.ToBoolean(bool_push);
             }
             catch (System.FormatException)
             {
-                Console.WriteLine("Invalid argument: must be either 1 or 0");
-                return;
-            }
-            VRCC.Radio_SetReceiveEnabled(currentRadio, index);
-            Console.WriteLine("Receiving: " + Convert.ToBoolean(index));
-        }
-
-        public static void get_transmit(String parameters)
-        {
-            Boolean transmitting = Convert.ToBoolean(VRCC.Radio_IsTransmitEnabled(currentRadio));
-            if (!transmitting)
-            {
-                Console.Write("Not ");
-            }
-            Console.WriteLine("Transmitting");
-        }
-
-        public static void set_transmit(String int_enabled)
-        {
-            if (int_enabled == null || int_enabled == "")
-            {
-                Console.WriteLine("Specify an enable mode (1 for enabled 0 for not enabled)");
+                Console.WriteLine("Invalid argument: must be value 1, 0, true, or false");
                 Console.WriteLine();
+            }
 
-                Console.Write("> ");
-                int_enabled = Console.ReadLine();
-            }
-            Int32 index = new Int32();
-            try
-            {
-                index = Convert.ToInt32(int_enabled);
-            }
-            catch (System.FormatException)
-            {
-                Console.WriteLine("Invalid argument: must be either 1 or 0");
-                return;
-            }
-            VRCC.Radio_SetTransmitEnabled(currentRadio, index);
-            Console.WriteLine("Transmitting: " + Convert.ToBoolean(index));
+            VRCC.PTT_SetPressed(push);
+
+            Console.WriteLine("Setting push to talk: " + push);
         }
 
         #endregion VRCC commands
