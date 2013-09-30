@@ -3,7 +3,6 @@
 
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Text;
     using System.Runtime.InteropServices;
     using System.Diagnostics;
@@ -723,6 +722,46 @@
         public static Boolean Joystick_Pressed_Bool()
         {
             return Joystick_Pressed() == 1;
+        }
+
+        public static void PTT_SetPressed(Boolean ptt)
+        {
+            PTT_SetPressed(Convert.ToInt32(ptt));
+        }
+
+        public static void Headset_SetCallMicrophoneMute(Boolean active)
+        {
+            Headset_SetCallMicrophoneMute(Convert.ToInt32(active));
+        }
+
+        public static void PTT_SetPressed_Multi(int ptt, Boolean pressed)
+        {
+            PTT_SetPressed_Multi(ptt, Convert.ToInt32(pressed));
+        }
+
+        public static void Radio_SetReceiveEnabled(int radio_index, Boolean enable)
+        {
+            Radio_SetReceiveEnabled(radio_index, Convert.ToInt32(enable));
+        }
+
+        public static void Radio_SetTransmitEnabled(int radio_index, Boolean enable)
+        {
+            Radio_SetTransmitEnabled(radio_index, Convert.ToInt32(enable));
+        }
+
+        public static void Radio_SetCryptoEnable(int radio_index, Boolean enable)
+        {
+            Radio_SetCryptoEnable(radio_index, Convert.ToInt32(enable));
+        }
+
+        public static void Earshot_SetPTT(Boolean ptt)
+        {
+            Earshot_SetPTT(Convert.ToInt32(ptt));
+        }
+
+        public static void Earshot_Enable(Boolean enable)
+        {
+            Earshot_Enable(Convert.ToInt32(enable));
         }
 
         #endregion alternate versions
