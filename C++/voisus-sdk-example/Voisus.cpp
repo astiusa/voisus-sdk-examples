@@ -21,6 +21,9 @@ _Voisus_Error_fn Voisus_Error_fn;
 typedef void (*_Voisus_Save_fn)();
 _Voisus_Save_fn Voisus_Save_fn;
 
+typedef void (*_VRCC_Update_fn)();
+_VRCC_Update_fn VRCC_Update_fn;
+
 typedef int (*_Radio_NetListCount_fn)(int radio_index);
 _Radio_NetListCount_fn Radio_NetListCount_fn;
 
@@ -220,6 +223,12 @@ void VoisusPlugin::Voisus_Save()
 {
 	if (Voisus_Save_fn)
 		Voisus_Save_fn();
+}
+
+void VoisusPlugin::VRCC_Update()
+{
+	if (VRCC_Update_fn)
+		VRCC_Update_fn();
 }
 
 void VoisusPlugin::PTT_SetPressed (int ptt)
@@ -600,6 +609,7 @@ int VoisusPlugin::LoadDLL()
 		Voisus_ConnectServer_fn = (_Voisus_Connect_fn)GetProcAddress(hInstLibrary,"Voisus_ConnectServer");
 		Voisus_Error_fn = (_Voisus_Error_fn)GetProcAddress(hInstLibrary,"Voisus_Error");
 		Voisus_Save_fn = (_Voisus_Save_fn)GetProcAddress(hInstLibrary,"Voisus_Save");
+    VRCC_Update_fn = (_VRCC_Update_fn)GetProcAddress(hInstLibrary,"VRCC_Update");
 		Voisus_ClientBuildVersion_fn = (_Voisus_ClientBuildVersion_fn)GetProcAddress(hInstLibrary,"Voisus_ClientBuildVersion");
 
 		Network_TargetIP_fn = (_Network_TargetIP_fn)GetProcAddress(hInstLibrary,"Network_TargetIP");

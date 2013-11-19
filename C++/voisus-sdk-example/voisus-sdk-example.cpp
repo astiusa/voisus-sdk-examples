@@ -23,16 +23,6 @@ int _tmain(int argc, _TCHAR* argv[])
 
   std::cout << "VRCC DLL has been loaded" << std::endl;
 
-  /*
-  // Set the client name
-  vapi.Network_SetClientName("VoisusSDK_Ex");
-  char clientName[20];
-  strcpy(clientName, vapi.Network_ClientName());
-  std::cout << "Client name: ";
-  std::cout << clientName;
-  std::cout << "\n";
-  */
-
   // Next we'll connect to a server
   if(!connectToServer()) {
     std::cout << "Unable to connect to server" << std::endl;
@@ -43,11 +33,6 @@ int _tmain(int argc, _TCHAR* argv[])
   // for this client to use
   std::cout << "Connected to server.  Requesting Roles" << std::endl;
   selectRole();
-
-  /*
-  const char* clientBuildVersion = vapi.Voisus_ClientBuildVersion();
-  std::cout << clientBuildVersion;
-  */
   
   // Ok, now that we're connected to a Role, we can take
   // a look at our communication assets
@@ -78,6 +63,7 @@ bool connectToServer() {
   std::cin >> ip;
   vapi.Voisus_ConnectServer(ip);
   for (int i=0; i<10; i++) {
+    vapi.VRCC_Update(); // this should really be called from a main event loop
     if(vapi.Network_ConnectionStatus() == STATUS_CONNECTED)
       return true;
     Sleep(1000);
@@ -86,6 +72,7 @@ bool connectToServer() {
 }
 
 bool selectRole() {
+  vapi.VRCC_Update(); // this should really be called from a main event loop
   int roleCount = vapi.Role_ListCount();
   if (roleCount == 0) {
     std::cout << "Current running scenario doesn't have any roles defined." << std::endl;;
@@ -115,6 +102,7 @@ bool selectRole() {
   // Wait for role selection to take effect
   // Afterwards, we can start polling for radio information
   for (int i = 0; i < 10; i++) {
+    vapi.VRCC_Update(); // this should really be called from a main event loop
     if(vapi.Network_ConnectState() == ROLE_CONNECTED) {
       std::cout << "Successfully connected to role: " << roleName << std::endl;
       return true;
@@ -126,6 +114,7 @@ bool selectRole() {
 }
 
 void printRadios() {
+  vapi.VRCC_Update(); // this should really be called from a main event loop
   //system("cls");
   std::cout << "\n\n\n";
   std::cout << "Current Radio Status:" << std::endl;

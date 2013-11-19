@@ -56,6 +56,7 @@ public:
 	int Voisus_ConnectServer(char*);
 	void Voisus_Disconnect();
 	void Voisus_Save();
+  void VRCC_Update();
 	Error_t Voisus_Error();
 
 	int TargetConnection_Status(int listnum);
