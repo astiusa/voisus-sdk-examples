@@ -16,7 +16,6 @@ using VoisusCS;
  * specified at the command line.  To add a command, just define a public static function
  * that takes a String argument.  The name of the function will become the name of the command.
  */
-
 namespace ConsoleApplication
 {
     class Program
@@ -385,11 +384,15 @@ namespace ConsoleApplication
 
         static void Main(string[] args)
         {
-            Console.WriteLine(System.IO.Directory.GetCurrentDirectory());
+            Console.WriteLine("Working Directory: " + System.IO.Directory.GetCurrentDirectory());
+            
+            Console.WriteLine("Voisus Install Directory: " + VRCC.VoisusInstallDir);
+            
             Console.WriteLine("VRCC C# Library Test");
             Console.WriteLine();
             Console.WriteLine("Type get_help to see available commands.");
             VRCC.VRCC_Start();
+
 
             String input = "";
             while (true)
