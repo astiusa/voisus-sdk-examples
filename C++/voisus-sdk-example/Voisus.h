@@ -77,6 +77,10 @@ public:
 	const char* Radio_NetID(int radio_index,int net_index);
 	int Radio_NetListCount(int fillId);
 	const char* Radio_NetIDActive(int radio_index);
+  void Radio_SetNetRxFrequency(int radio_index, const char *net_id, unsigned long long freq);
+  void Radio_SetNetTxFrequency(int radio_index, const char *net_id, unsigned long long freq);
+  unsigned long long Radio_NetRxFrequencyActive(int radio_index);
+  unsigned long long Radio_NetTxFrequencyActive(int radio_index);
 
 	const char* Network_ClientName();
   void Network_SetClientName(const char* clientName);

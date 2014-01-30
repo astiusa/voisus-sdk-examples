@@ -80,6 +80,14 @@ typedef const char* (*_Radio_NetID_fn)(int radio_index, int net_index);
 _Radio_NetID_fn Radio_NetID_fn;
 typedef const char* (*_Radio_NetIDActive_fn)(int radio_index);
 _Radio_NetIDActive_fn Radio_NetIDActive_fn;
+typedef void (*_Radio_SetNetRxFrequency_fn)(int radio_index, const char *net_id, unsigned long long freq);
+_Radio_SetNetRxFrequency_fn Radio_SetNetRxFrequency_fn;
+typedef void (*_Radio_SetNetTxFrequency_fn)(int radio_index, const char *net_id, unsigned long long freq);
+_Radio_SetNetTxFrequency_fn Radio_SetNetTxFrequency_fn;
+typedef unsigned long long (*_Radio_NetRxFrequencyActive_fn)(int radio_index);
+_Radio_NetRxFrequencyActive_fn Radio_NetRxFrequencyActive_fn;
+typedef unsigned long long (*_Radio_NetTxFrequencyActive_fn)(int radio_index);
+_Radio_NetTxFrequencyActive_fn Radio_NetTxFrequencyActive_fn;
 
 // Role Functions
 typedef int (*_Role_ListCount_fn)();
@@ -533,6 +541,34 @@ int VoisusPlugin::Radio_IsShared(int radio_idx)
 	return 0;
 }
 
+void VoisusPlugin::Radio_SetNetRxFrequency(int radio_idx, const char* net_id, unsigned long long freq)
+{
+	if (Radio_SetNetRxFrequency_fn)
+		Radio_SetNetRxFrequency_fn(radio_idx, net_id, freq);
+}
+
+void VoisusPlugin::Radio_SetNetTxFrequency(int radio_idx, const char* net_id, unsigned long long freq)
+{
+	if (Radio_SetNetTxFrequency_fn)
+		Radio_SetNetTxFrequency_fn(radio_idx, net_id, freq);
+}
+
+unsigned long long VoisusPlugin::Radio_NetRxFrequencyActive(int radio_index)
+{
+  if (Radio_NetRxFrequencyActive_fn) {
+    return Radio_NetRxFrequencyActive_fn(radio_index);
+  }
+  return 0;
+}
+
+unsigned long long VoisusPlugin::Radio_NetTxFrequencyActive(int radio_index)
+{
+  if (Radio_NetTxFrequencyActive_fn) {
+    return Radio_NetTxFrequencyActive_fn(radio_index);
+  }
+  return 0;
+}
+
 void VoisusPlugin::Earshot_Enable(int enabled)
 {
 	if (Earshot_Enable_fn)
@@ -649,6 +685,10 @@ int VoisusPlugin::LoadDLL()
 		Radio_NetListCount_fn = (_Radio_NetListCount_fn)GetProcAddress(hInstLibrary,"Radio_NetListCount");
 		Radio_NetID_fn = (_Radio_NetID_fn)GetProcAddress(hInstLibrary,"Radio_NetID");
 		Radio_NetIDActive_fn = (_Radio_NetIDActive_fn)GetProcAddress(hInstLibrary,"Radio_NetIDActive");
+    Radio_SetNetRxFrequency_fn = (_Radio_SetNetRxFrequency_fn)GetProcAddress(hInstLibrary,"Radio_SetNetRxFrequency");
+    Radio_SetNetTxFrequency_fn = (_Radio_SetNetTxFrequency_fn)GetProcAddress(hInstLibrary,"Radio_SetNetTxFrequency");
+    Radio_NetRxFrequencyActive_fn = (_Radio_NetRxFrequencyActive_fn)GetProcAddress(hInstLibrary,"Radio_NetRxFrequencyActive");
+    Radio_NetTxFrequencyActive_fn = (_Radio_NetTxFrequencyActive_fn)GetProcAddress(hInstLibrary,"Radio_NetTxFrequencyActive");
 
 		Headset_SetMicrophoneMode_fn = (_Headset_SetMicrophoneMode_fn)GetProcAddress(hInstLibrary,"Headset_SetMicrophoneMode");
 		Headset_MicrophoneMode_fn = (_Headset_MicrophoneMode_fn)GetProcAddress(hInstLibrary,"Headset_MicrophoneMode");
