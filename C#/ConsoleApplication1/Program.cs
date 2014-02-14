@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using VoisusCS;
 
 /*
@@ -21,6 +22,13 @@ namespace ConsoleApplication
     class Program
     {
         static int currentRadio;
+
+        static void auxaudio_callback(IntPtr left_bytes, int left_len, int left_samples,
+                                      IntPtr right_bytes, int right_len, int right_samples)
+        {
+            Console.WriteLine("AuxAudio: Received {0:D} samples", left_samples);
+        }
+        static AuxAudioDelegate myDelegate = new AuxAudioDelegate(Program.auxaudio_callback);
 
         #region VRCC commands
 
@@ -333,6 +341,35 @@ namespace ConsoleApplication
             VRCC.PTT_SetPressed(push);
 
             Console.WriteLine("Setting push to talk: " + push);
+        }
+
+        public static void auxaudio_enable(String parameters)
+        {
+            int sample_rate, encoding;
+            Console.WriteLine("Enter sample rate in Hz (e.g. 16000):");
+            Console.WriteLine();
+            Console.Write("> ");
+            sample_rate = Convert.ToInt32(Console.ReadLine());
+
+            Console.WriteLine("Enter encoding enumeration (e.g. 1 for Mulaw, 4 for SPCM16):");
+            Console.WriteLine();
+            Console.Write("> ");
+            encoding = Convert.ToInt32(Console.ReadLine());
+
+            VRCC.AuxAudio_Enable(1, sample_rate, encoding);
+            Console.WriteLine("AuxAudio enabled.");
+        }
+
+        public static void auxaudio_disable(String parameters)
+        {
+            VRCC.AuxAudio_Enable(0, 0, 0);
+            Console.WriteLine("AuxAudio disabled.");
+        }
+
+        public static void auxaudio_register(String parameters)
+        {
+            VRCC.AuxAudio_Register(Marshal.GetFunctionPointerForDelegate(myDelegate));
+            Console.WriteLine("AuxAudio callback registered.");
         }
 
         #endregion VRCC commands
