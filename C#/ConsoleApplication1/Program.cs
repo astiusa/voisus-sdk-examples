@@ -394,15 +394,18 @@ namespace ConsoleApplication
             VRCC.VRCC_Start();
 
 
+            Console.WriteLine();
+            Console.Write("> ");
             String input = "";
             while (true)
-            {
-                Console.WriteLine();
-                Console.Write("> ");
-                input = Console.ReadLine();
+            {   if (Console.KeyAvailable)
+                {   input = Console.ReadLine();
+                    execute(input);
+                    Console.WriteLine();
+                    Console.Write("> ");
+                }
                 VRCC.VRCC_Update();
-                Console.WriteLine();
-                execute(input);
+                System.Threading.Thread.Sleep(50);
             }
         }
     }
