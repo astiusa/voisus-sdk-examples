@@ -346,15 +346,35 @@ namespace ConsoleApplication
         public static void auxaudio_enable(String parameters)
         {
             int sample_rate, encoding;
-            Console.WriteLine("Enter sample rate in Hz (e.g. 16000):");
+            Console.WriteLine("Enter sample rate in Hz (e.g. 8000, 16000):");
             Console.WriteLine();
             Console.Write("> ");
-            sample_rate = Convert.ToInt32(Console.ReadLine());
+            try
+            {
+                sample_rate = Convert.ToInt32(Console.ReadLine());
+                if (0 == sample_rate)
+                    throw new System.FormatException();
+            }
+            catch (System.FormatException)
+            {
+                Console.WriteLine("Invalid argument: must be an integer corresponding to a sample rate in Hz");
+                return;
+            }
 
             Console.WriteLine("Enter encoding enumeration (e.g. 1 for Mulaw, 4 for SPCM16):");
             Console.WriteLine();
             Console.Write("> ");
-            encoding = Convert.ToInt32(Console.ReadLine());
+            try
+            {
+                encoding = Convert.ToInt32(Console.ReadLine());
+                if ((1 != encoding) && (4 != encoding))
+                    throw new System.FormatException();
+            }
+            catch (System.FormatException)
+            {
+                Console.WriteLine("Invalid argument: must be an integer corresponding to valid encoding type");
+                return;
+            }
 
             VRCC.AuxAudio_Enable(1, sample_rate, encoding);
             Console.WriteLine("AuxAudio enabled.");

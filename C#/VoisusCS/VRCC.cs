@@ -404,7 +404,7 @@
         [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
         public extern static void AuxAudio_Enable (int enable, int sample_rate, int encoding);
         [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
-        public extern static void AuxAudio_Register(IntPtr callback);
+        public extern static void AuxAudio_Register (IntPtr callback);
 
         #endregion public
 
