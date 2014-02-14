@@ -36,7 +36,7 @@ namespace ConsoleApplication
         {
             if (IPAddress == null || IPAddress == "")
             {
-                Console.WriteLine("Connect to what IP adress?");
+                Console.WriteLine("Enter IP address of server:");
                 Console.WriteLine();
                 Console.Write("> ");
                 IPAddress = Console.ReadLine();
@@ -387,7 +387,7 @@ namespace ConsoleApplication
                     Console.Write(", ");
                     continue;
                 }
-                Console.Write(": [" + paramInfos[0].Name + "], ");
+                Console.Write(" [" + paramInfos[0].Name + "], ");
             }
             Console.WriteLine();
             Console.WriteLine();
