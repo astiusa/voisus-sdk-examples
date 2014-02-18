@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using VoisusCS;
 
 /*
@@ -22,13 +23,20 @@ namespace ConsoleApplication
     {
         static int currentRadio;
 
+        static void auxaudio_callback(IntPtr left_bytes, int left_len, int left_samples,
+                                      IntPtr right_bytes, int right_len, int right_samples)
+        {
+            Console.WriteLine("AuxAudio: Received {0:D} samples", left_samples);
+        }
+        static AuxAudioDelegate myDelegate = new AuxAudioDelegate(Program.auxaudio_callback);
+
         #region VRCC commands
 
         public static void connect(String IPAddress)
         {
             if (IPAddress == null || IPAddress == "")
             {
-                Console.WriteLine("Connect to what IP adress?");
+                Console.WriteLine("Enter IP address of server:");
                 Console.WriteLine();
                 Console.Write("> ");
                 IPAddress = Console.ReadLine();
@@ -335,6 +343,55 @@ namespace ConsoleApplication
             Console.WriteLine("Setting push to talk: " + push);
         }
 
+        public static void auxaudio_enable(String parameters)
+        {
+            int sample_rate, encoding;
+            Console.WriteLine("Enter sample rate in Hz (e.g. 8000, 16000):");
+            Console.WriteLine();
+            Console.Write("> ");
+            try
+            {
+                sample_rate = Convert.ToInt32(Console.ReadLine());
+                if (0 == sample_rate)
+                    throw new System.FormatException();
+            }
+            catch (System.FormatException)
+            {
+                Console.WriteLine("Invalid argument: must be an integer corresponding to a sample rate in Hz");
+                return;
+            }
+
+            Console.WriteLine("Enter encoding enumeration (e.g. 1 for Mulaw, 4 for SPCM16):");
+            Console.WriteLine();
+            Console.Write("> ");
+            try
+            {
+                encoding = Convert.ToInt32(Console.ReadLine());
+                if ((1 != encoding) && (4 != encoding))
+                    throw new System.FormatException();
+            }
+            catch (System.FormatException)
+            {
+                Console.WriteLine("Invalid argument: must be an integer corresponding to valid encoding type");
+                return;
+            }
+
+            VRCC.AuxAudio_Enable(1, sample_rate, encoding);
+            Console.WriteLine("AuxAudio enabled.");
+        }
+
+        public static void auxaudio_disable(String parameters)
+        {
+            VRCC.AuxAudio_Enable(0, 0, 0);
+            Console.WriteLine("AuxAudio disabled.");
+        }
+
+        public static void auxaudio_register(String parameters)
+        {
+            VRCC.AuxAudio_Register(Marshal.GetFunctionPointerForDelegate(myDelegate));
+            Console.WriteLine("AuxAudio callback registered.");
+        }
+
         #endregion VRCC commands
 
         public static void get_help(String parameters)
@@ -350,7 +407,7 @@ namespace ConsoleApplication
                     Console.Write(", ");
                     continue;
                 }
-                Console.Write(": [" + paramInfos[0].Name + "], ");
+                Console.Write(" [" + paramInfos[0].Name + "], ");
             }
             Console.WriteLine();
             Console.WriteLine();
@@ -394,15 +451,18 @@ namespace ConsoleApplication
             VRCC.VRCC_Start();
 
 
+            Console.WriteLine();
+            Console.Write("> ");
             String input = "";
             while (true)
-            {
-                Console.WriteLine();
-                Console.Write("> ");
-                input = Console.ReadLine();
+            {   if (Console.KeyAvailable)
+                {   input = Console.ReadLine();
+                    execute(input);
+                    Console.WriteLine();
+                    Console.Write("> ");
+                }
                 VRCC.VRCC_Update();
-                Console.WriteLine();
-                execute(input);
+                System.Threading.Thread.Sleep(50);
             }
         }
     }

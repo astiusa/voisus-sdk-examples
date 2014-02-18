@@ -11,6 +11,9 @@
     using System.Threading;
     using Microsoft.Win32;
 
+    public delegate void AuxAudioDelegate(IntPtr left_bytes, int left_len, int left_samples,
+                                          IntPtr right_bytes, int right_len, int right_samples);
+
     /// <summary>
     /// C# wrapper for the VRCC 
     /// </summary>
@@ -397,6 +400,11 @@
         public extern static void DIS_SetParams ([MarshalAs(UnmanagedType.LPStruct)] DISParams_t dis_params);
         [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
         public extern static void DIS_GetParams ([MarshalAs(UnmanagedType.LPStruct)] DISParams_t dis_params);
+
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static void AuxAudio_Enable (int enable, int sample_rate, int encoding);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static void AuxAudio_Register (IntPtr callback);
 
         #endregion public
 
