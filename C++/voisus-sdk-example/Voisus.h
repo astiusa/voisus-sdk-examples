@@ -123,7 +123,7 @@ public:
 	int Earshot_Receiving();
 	int Earshot_Transmitting();
 
-	void VRCC_Start();
+	void VRCC_Start(int argc, char* argv[]);
   void VRCC_Shutdown();
 
 	const char* Voisus_ClientBuildVersion();

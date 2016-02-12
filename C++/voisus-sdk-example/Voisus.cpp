@@ -176,12 +176,8 @@ VoisusPlugin::~VoisusPlugin()
 
 }
 
-void VoisusPlugin::VRCC_Start()
+void VoisusPlugin::VRCC_Start(int argc, char* argv[])
 {
-	int argc = 1;
-	char* argv[2];
-	argv[0] = "VBS2.exe";
-	argv[1] = NULL;
 	if (VRCC_Start_fn)
 		VRCC_Start_fn(argc, argv);
 }

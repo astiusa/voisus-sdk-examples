@@ -3,7 +3,7 @@ VoisusPlugin vapi;
 int _tmain(int argc, _TCHAR* argv[])
 {
   // First we have some initialization to do
-  if (!initialize_VRCC()) {
+  if (!initialize_VRCC(argc, argv)) {
     std::cout << "Unable to load VRCC DLL.  Is the Voisus Client installed?" << std::endl;
     return 1;
   }
@@ -46,10 +46,10 @@ int _tmain(int argc, _TCHAR* argv[])
   return 0;
 }
 
-bool initialize_VRCC() {
+bool initialize_VRCC(int argc, char* argv[]) {
  
   if (vapi.LoadDLL()) {
-    vapi.VRCC_Start();
+    vapi.VRCC_Start(argc, argv);
     return true;
   }
   else {
