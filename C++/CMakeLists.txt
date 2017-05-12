@@ -1,0 +1,8 @@
+cmake_minimum_required (VERSION 2.8.12)
+project (voisus-sdk-example)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+if (UNIX)
+    link_directories(/opt/asti/voisus-client/usr/lib)
+endif()
+add_executable (voisus-sdk-example voisus-sdk-example.cpp vrcc.h vrc_types.h)
+target_link_libraries (voisus-sdk-example vrcc dl)
