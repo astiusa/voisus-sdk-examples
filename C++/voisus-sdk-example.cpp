@@ -2,9 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #ifdef WIN32
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
+    #include <io.h>
+    #include <winsock2.h>
 #else
     #include <unistd.h>
 #endif
@@ -70,13 +73,11 @@ size_t get_input(char* buf, size_t bufsz)
 {
     int sz = 0;
     while (1)
-    {   sz = read(STDIN_FILENO, buf, bufsz);
+    {   sz = read(fileno(stdin), buf, bufsz);
         if (-1 != sz)
         {   buf[sz-1] = '\0';
             return sz;
         }
-        VRCC_Update(); // Must be called periodically to get updates
-        my_sleep(50);
     }
     return 0;
 }
@@ -103,7 +104,7 @@ void execute(const char* buf)
         {   check_server();
             check_connected();
             cmd->func();
-            snprintf(Last_cmd, sizeof(Last_cmd), cmd->name);
+            sprintf(Last_cmd, cmd->name);
             return;
         }
         ++cmd;
@@ -296,6 +297,7 @@ void quit_app(void)
 
 int input_available()
 {
+#ifndef WIN32
     struct timeval tv;
     fd_set fds;
     tv.tv_sec = 0;
@@ -304,10 +306,31 @@ int input_available()
     FD_SET(STDIN_FILENO, &fds);
     select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
     return FD_ISSET(0, &fds);
+#else
+    HANDLE eventHandles[] = {GetStdHandle(STD_INPUT_HANDLE)};
+    DWORD result = WSAWaitForMultipleEvents(1, eventHandles, FALSE, 0, TRUE);
+    switch (result) {
+        case WSA_WAIT_EVENT_0:  // event on stdin
+            return 1;
+        case WSA_WAIT_TIMEOUT:  // no events
+        default:
+            break;
+    };
+#endif
+    return 0;
+}
+
+void init(void)
+{
+#ifdef WIN32
+    WSADATA wsadata;
+    WSAStartup(MAKEWORD(2,0), &wsadata);
+#endif
 }
 
 int main(int argc, char* argv[])
 {
+    init();
     printf("VRCC C/C++ Library Sample Application\n\n");
     printf("Type get_help to see available commands.\n\n");
 
@@ -328,8 +351,6 @@ int main(int argc, char* argv[])
             my_sleep(50);
         }
     }
-
-    printf("Done.\n");
 
     return 0;
 }
