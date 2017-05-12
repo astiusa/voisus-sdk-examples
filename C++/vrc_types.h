@@ -12,23 +12,23 @@ extern "C" {
 
 /// Client connection status
 enum ConnectionStatus_t
-    {
-        STATUS_NONE,               ///< Client has not connected to a target
-        STATUS_DISCONNECTED,       ///< Client has disconnected from a target
-        STATUS_CONNECTED           ///< Client is currently connected to a target
-    };
+{
+    STATUS_NONE,                    ///< Client has not connected to a target
+    STATUS_DISCONNECTED,            ///< Client has disconnected from a target
+    STATUS_CONNECTED                ///< Client is currently connected to a target
+};
 
 /// Role connection states
 enum ConnectState_t
-    {
-        TARGET_CONNECT,            ///< Connecting to Target
-        ROLE_GET,                  ///< Connected to Target, requesting roles
-        ROLES_RECEIVED,            ///< Received roles
-        ROLE_SET,                  ///< Sending role request
-        ROLE_CONNECT,              ///< Role request confirmed, Acquiring license for Operator
-        ROLE_CONNECTED,            ///< Connected to Operator
-        TARGET_AUTHORIZE           ///< Authorizing with Target
-    };
+{
+    TARGET_CONNECT,                 ///< Connecting to Target
+    ROLE_GET,                       ///< Connected to Target, requesting roles
+    ROLES_RECEIVED,                 ///< Received roles
+    ROLE_SET,                       ///< Sending role request
+    ROLE_CONNECT,                   ///< Role request confirmed, Acquiring license for Operator
+    ROLE_CONNECTED,                 ///< Connected to Operator
+    TARGET_AUTHORIZE                ///< Authorizing with Target
+};
 
 /// DIS parameters
 typedef struct
@@ -90,27 +90,27 @@ typedef void(*AudioCallback)(char* left_bytes,
                              unsigned int right_len,
                              unsigned int right_samples);
 
-/// License Event
-enum LicenseEvent_t
+/// License request status
+enum LicenseStatus_t
 {
-    LICENSE_PENDING = 1,            ///< License request pending
-    LICENSE_GRANTED = 2,            ///< License has been granted
-    LICENSE_RELEASED = 3,           ///< License has been released
-    LICENSE_LOST = 4                ///< License has been lost
+    LICENSE_STATUS_PENDING = 1,     ///< Request pending
+    LICENSE_STATUS_GRANTED = 2,     ///< Request granted
+    LICENSE_STATUS_RELEASED = 3,    ///< Request released
+    LICENSE_STATUS_LOST = 4         ///< Request lost
+};
+
+
+/// Audio Device Types
+enum AudioDeviceType_t
+{
+    AUDIO_DEVICE_PLAYBACK = 1,      ///< Playback device (Speakers, Headsets)
+    AUDIO_DEVICE_CAPTURE = 2,       ///< Capture device (Microphone)
+    AUDIO_DEVICE_PLAYBACK2 = 3,     ///< Secondary playback device
+    AUDIO_DEVICE_TOTAL
 };
 
 #ifdef __cplusplus
 }
 #endif
-
-
-/// Audio Device Types
-enum AudioDeviceType_t
-    {
-        AUDIO_DEVICE_PLAYBACK = 1,  ///< Playback device (Speakers, Headsets)
-        AUDIO_DEVICE_CAPTURE = 2,   ///< Capture device (Microphone)
-        AUDIO_DEVICE_PLAYBACK2 = 3, ///< Secondary playback device
-        AUDIO_DEVICE_TOTAL
-    };
 
 #endif
