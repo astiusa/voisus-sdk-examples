@@ -14,17 +14,19 @@
 
 using namespace std;
 
-int Current_radio;
-char Last_cmd[1024];
+///////////////////////////////////////////////////////////////////////////////
+// Definitions
+///////////////////////////////////////////////////////////////////////////////
 
-void get_help(void);
+int Current_radio;
+
 void connect(void);
 void disconnect(void);
+void help(void);
 void get_radio(void);
 void get_radio_nets(void);
 void get_radios(void);
 void get_roles(void);
-void get_status(void);
 void set_client_name(void);
 void set_ptt(void);
 void set_radio(void);
@@ -33,6 +35,7 @@ void set_role(void);
 void set_rx_enable(void);
 void set_tx_enable(void);
 void quit_app(void);
+void status(void);
 
 typedef void (*samplefunc)();
 
@@ -42,14 +45,13 @@ typedef struct {
     samplefunc func;
 } COMMAND_T;
 
-COMMAND_T Commands[] = {{"get_help", "Print command descriptions", get_help},
-                        {"connect", "Connect to server", connect},
+COMMAND_T Commands[] = {{"connect", "Connect to server", connect},
                         {"disconnect", "Disconnect from server", disconnect},
+                        {"help", "Print the command descriptions", help},
                         {"get_radio", "Get current radio info", get_radio},
                         {"get_radio_nets", "Get nets assigned to current radio", get_radio_nets},
                         {"get_radios", "Get info on all radios", get_radios},
                         {"get_roles", "Get list of roles", get_roles},
-                        {"get_status", "Get current status", get_status},
                         {"set_client_name", "Set client name", set_client_name},
                         {"set_ptt", "Set PTT state (pressed or released)", set_ptt},
                         {"set_radio", "Set the current radio by index", set_radio},
@@ -58,7 +60,12 @@ COMMAND_T Commands[] = {{"get_help", "Print command descriptions", get_help},
                         {"set_rx_enable", "Set receive enable for current radio", set_rx_enable},
                         {"set_tx_enable", "Set transmit enable for current radio", set_tx_enable},
                         {"quit", "Quit the application", quit_app},
+                        {"status", "Get the current status", status},
                         {NULL, NULL, NULL}};
+
+///////////////////////////////////////////////////////////////////////////////
+// Helper functions
+///////////////////////////////////////////////////////////////////////////////
 
 void my_sleep(unsigned int ms)
 {
@@ -96,6 +103,7 @@ void check_connected(void)
 
 void execute(const char* buf)
 {
+    static char Last_cmd[1024];
     COMMAND_T* cmd = Commands;
     if ((0 == strlen(buf)) && (strlen(Last_cmd)))
         buf = Last_cmd;
@@ -109,7 +117,7 @@ void execute(const char* buf)
         }
         ++cmd;
     }
-    printf("Unknown command. Type get_help to see available commands.");
+    printf("Unknown command. Type help to see available commands.");
 }
 
 void print_radio(int idx)
@@ -129,14 +137,9 @@ void print_radio(int idx)
            Radio_IsTransmitting(idx) ? "true" : "false");
 }
 
-void get_help(void)
-{
-    COMMAND_T* cmd = Commands;
-    while (cmd->name)
-    {   printf("%-20s %s\n", cmd->name, cmd->desc);
-        cmd++;
-    }
-}
+///////////////////////////////////////////////////////////////////////////////
+// Commands
+///////////////////////////////////////////////////////////////////////////////
 
 void connect(void)
 {
@@ -150,6 +153,15 @@ void connect(void)
 void disconnect(void)
 {
     Voisus_Disconnect();
+}
+
+void help(void)
+{
+    COMMAND_T* cmd = Commands;
+    while (cmd->name)
+    {   printf("%-20s %s\n", cmd->name, cmd->desc);
+        cmd++;
+    }
 }
 
 void get_radio(void)
@@ -188,20 +200,6 @@ void get_roles(void)
 {
     for (int i = 0; i < Role_ListCount(); i++)
         printf("    Role %d:\t%s\n", i, Role_Name(i));
-}
-
-void get_status(void)
-{
-    printf("Voisus Server IP Address: %s\n"
-           "Client Name: %s\n"
-           "Connection State: %d\n"
-           "Connection Status: %s\n"
-           "Role: %s\n",
-           Network_TargetIP(),
-           Network_ClientName(),
-           Network_ConnectState(),
-           Network_ConnectionStatus() == STATUS_CONNECTED ? "Connected" : "Disconnected",
-           Role_NameActive());
 }
 
 void set_client_name(void)
@@ -295,6 +293,20 @@ void quit_app(void)
     exit(0);
 }
 
+void status(void)
+{
+    printf("Voisus Server IP Address: %s\n"
+           "Client Name: %s\n"
+           "Connection State: %d\n"
+           "Connection Status: %s\n"
+           "Role: %s\n",
+           Network_TargetIP(),
+           Network_ClientName(),
+           Network_ConnectState(),
+           Network_ConnectionStatus() == STATUS_CONNECTED ? "Connected" : "Disconnected",
+           Role_NameActive());
+}
+
 int input_available()
 {
 #ifndef WIN32
@@ -332,7 +344,7 @@ int main(int argc, char* argv[])
 {
     init();
     printf("VRCC C/C++ Library Sample Application\n\n");
-    printf("Type get_help to see available commands.\n\n");
+    printf("Type help to see available commands.\n\n");
 
     VRCC_Start(argc, argv);
 
