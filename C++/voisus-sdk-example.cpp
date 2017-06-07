@@ -313,6 +313,7 @@ void set_tx_enable(void)
 
 void quit_app(void)
 {
+    VRCC_Shutdown();
     exit(0);
 }
 
