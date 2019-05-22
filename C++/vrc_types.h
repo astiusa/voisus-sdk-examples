@@ -36,6 +36,15 @@ enum ConnectionStatus_t
     STATUS_CONNECTED                ///< Client is currently connected to a target
 };
 
+/// Connection Modes
+enum ConnectionMode_t
+{
+    CONNECT_MODE_NONE,              ///< No connection mode
+    CONNECT_MODE_STANDALONE,        ///< Connecting to local radio environment
+    CONNECT_MODE_SERVER,            ///< Connecting to remote Voisus server
+    CONNECT_MODE_CLOUD              ///< Connecting to an ASTi cloud
+};
+
 /// Role connection states
 enum ConnectState_t
 {
@@ -62,7 +71,7 @@ typedef struct
 typedef struct
 {
     const char* call_id;            ///< Unique ID of the call
-    const char* endpoint_id;        ///< Unique ID of the endpoint to invite
+    const char* endpoint_id;        ///< Unique ID of the inviter endpoint
 } CallInvitation_t;
 
 /// Audio Encoding
@@ -125,6 +134,29 @@ enum AudioDeviceType_t
     AUDIO_DEVICE_CAPTURE = 2,       ///< Capture device (Microphone)
     AUDIO_DEVICE_PLAYBACK2 = 3,     ///< Secondary playback device
     AUDIO_DEVICE_TOTAL
+};
+
+
+/// Jammer Record/Replay State
+enum JammerRecordReplayState_t
+{
+    JAMMER_STATE_INIT = 1,          ///< Initial state, no recording completed
+    JAMMER_STATE_WAITING = 2,       ///< Waiting to record next received audio
+    JAMMER_STATE_RECORDING = 3,     ///< Recording audio
+    JAMMER_STATE_REPLAYING = 4,     ///< Replaying audio
+    JAMMER_STATE_IDLE = 5,          ///< Idle state with audio recorded
+};
+
+/// Error conditions
+enum Error_t
+{
+    ERROR_OFF,            ///< No error
+    ERROR_CREDITS,        ///< Credit system error
+    ERROR_VOISUS,         ///< Voisus Server error, check log
+    ERROR_AUTHORIZE,      ///< Error authorizing with server.\n
+                          ///<   Authorization requires a client name that
+                          ///<   matches the Software Clients settings in the
+                          ///<   running scenario
 };
 
 #ifdef __cplusplus
