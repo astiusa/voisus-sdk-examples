@@ -21,12 +21,24 @@
  * IN THE SOFTWARE.
  */
 
+/**
+ * \file vrcc.h
+ * \brief Voisus Remote Control Client (VRCC) Interface
+ * \details The Voisus Remote Control Client library provides an
+ * interface for interacting with the Voisus Client. Using this library, a
+ * developer can integrate the same functionality demonstrated in the ASTi
+ * Voisus Client into a user application.
+ *
+ * Please note that the API is not thread-safe, therefore all calls
+ * to API functions must be made from the same thread.
+ */
+
 #ifndef VRCC_H
 #define VRCC_H
 
 #include "vrc_types.h"
 
-/// Define external linkages
+// Define external linkages
 /// @cond
 #if defined(_WIN32)
 #  if defined(VRCC_BUILD)
@@ -52,12 +64,13 @@
 /// @details This function must be called before any other VRCC API calls can be made.
 /// @param argc Count of arguments passed to main Voisus client process
 /// @param argv NULL-terminated list of arguments
+/// @note This function is blocking and will return after the VRC client starts.
 /// @returns 1 on success, 0 on error
 VRCC_API int VRCC_Start(int argc, char* argv[]);
 
 /// @brief Shuts down the VRC messaging client
-/// @details This function should be called before exiting the program,
-/// typically after a call to ::Voisus_Shutdown.
+/// @details This function should be called before exiting the program.
+/// @note This function is blocking and will return after the VRC client shuts down.
 VRCC_API void VRCC_Shutdown();
 
 /// @brief Update the internal state of the VRC Client
@@ -69,6 +82,7 @@ VRCC_API int VRCC_Update(void);
 
 /// @brief Connects to a Voisus Server
 /// @details Initiates Voisus Client connection to specified server.
+/// @note This function is blocking and waits for a response before returning.
 /// @param target_ip IPv4 address of the server
 /// @see Network_ConnectState, Network_ConnectionStatus
 VRCC_API void Voisus_ConnectServer(const char* target_ip);
@@ -173,6 +187,18 @@ VRCC_API void Network_SetClientName(const char* name);
 /// on the server that the client is currently connected to.
 /// @returns operator ID if connected, empty string otherwise
 VRCC_API const char* Network_OperatorId();
+
+/// @brief Gets the last set Cloud to connect to
+/// @returns Unique name of the cloud
+VRCC_API const char* Network_CloudSet();
+
+/// @brief Gets the currently connected Cloud
+/// @returns Unique name of the cloud
+VRCC_API const char* Network_CloudActive();
+
+/// @brief Get the current connection mode (e.g. Cloud)
+/// @returns mode of type ::ConnectionMode_t
+VRCC_API int Network_ConnectionMode();
 
 /// @brief Gets the total number of Roles available to the client
 /// @returns number of roles
@@ -353,6 +379,7 @@ VRCC_API int Headset_HasSidetone();
 /// @details Sets the headset preset. Each preset contains
 /// default values. There are presets for Plantronics USB
 /// headset and the ASTi Radius.
+/// @note This function is blocking and waits for a response before returning.
 /// @param preset value of type ::HeadsetPreset_t
 VRCC_API void Headset_SetHeadsetPreset(int preset);
 
@@ -451,7 +478,7 @@ VRCC_API const char* Radio_Name(int radio_index);
 
 /// @brief Sets the net for a radio by index
 /// @param radio_index index of radio in range [0, radio_count-1]
-/// @param net_index index of net in range [0, net_count-1]
+/// @param net_index index of net in range [0, net_count-1], or negative value to power off radio
 /// @see Radio_ListCount, Radio_NetListCount
 VRCC_API void Radio_SetNet(int radio_index, int net_index);
 
@@ -481,9 +508,41 @@ VRCC_API void Radio_SetNetTxFrequency(int radio_index, const char* net_id, unsig
 /// @see Radio_ListCount
 VRCC_API unsigned long long Radio_NetTxFrequencyActive(int radio_index);
 
-/// @brief Sets the net for a radio by unique ID
+/// @brief Override the crypto settings for a net assigned to a particular radio
 /// @param radio_index index of radio in range [0, radio_count-1]
 /// @param net_id 32-character unique identifier for net
+/// @param system Crypto system
+/// @param key Crypto key
+/// @see Radio_ListCount, Radio_NetID
+VRCC_API void Radio_SetNetCrypto(int radio_index, const char* net_id, int system, int key);
+
+/// @brief Get the crypto system for the currently tuned net of a radio
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @returns whether crypto system currently tuned net, 0 if disabled
+/// @see Radio_ListCount
+VRCC_API int Radio_NetCryptoSystemActive(int radio_index);
+
+/// @brief Get the crypto key for the currently tuned net of a radio
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @returns whether crypto key currently tuned net, 0 if disabled
+/// @see Radio_ListCount
+VRCC_API int Radio_NetCryptoKeyActive(int radio_index);
+
+/// @brief Get the crypto enable state for the currently tuned net of a radio
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @returns whether crypto is enabled for currently tuned net
+/// @see Radio_ListCount
+VRCC_API int Radio_NetCryptoEnabledActive(int radio_index);
+
+/// @brief Get the waveform (mode) for the currently tuned net of a radio
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @returns waveform name
+/// @see Radio_ListCount
+VRCC_API const char* Radio_NetWaveformActive(int radio_index);
+
+/// @brief Sets the net for a radio by unique ID
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @param net_id 32-character unique identifier for net, or empty string to power off radio
 /// @see Radio_ListCount, Radio_NetID
 VRCC_API void Radio_SetNetID(int radio_index, const char* net_id);
 
@@ -516,21 +575,35 @@ VRCC_API const char* Radio_NetID(int radio_index, int net_index);
 /// @brief Gets the frequency of the radio's net
 /// @param radio_index index of radio in range [0, radio_count-1]
 /// @param net_index index of net in range [0, net_count-1]
-/// @returns returns unsigned long long for frequency or 0 if none
+/// @returns unsigned long long for frequency or 0 if none
 /// @see Radio_ListCount, Radio_NetListCount
 VRCC_API unsigned long long Radio_NetFrequency(int radio_index, int net_index);
 
 /// @brief Gets the waveform of the radio's net
 /// @param radio_index index of radio in range [0, radio_count-1]
 /// @param net_index index of net in range [0, net_count-1]
-/// @returns returns const char * for waveform or "" if none
+/// @returns waveform name
 /// @see Radio_ListCount, Radio_NetListCount
 VRCC_API const char * Radio_NetWaveform(int radio_index, int net_index);
+
+/// @brief Gets the crypto system of the radio's net
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @param net_index index of net in range [0, net_count-1]
+/// @returns crypto system, 0 if disabled
+/// @see Radio_ListCount, Radio_NetListCount
+VRCC_API int Radio_NetCryptoSystem(int radio_index, int net_index);
+
+/// @brief Gets the crypto key of the radio's net
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @param net_index index of net in range [0, net_count-1]
+/// @returns crypto key, 0 if disabled
+/// @see Radio_ListCount, Radio_NetListCount
+VRCC_API int Radio_NetCryptoKey(int radio_index, int net_index);
 
 /// @brief Gets the crypto enabled of the radio's net
 /// @param radio_index index of radio in range [0, radio_count-1]
 /// @param net_index index of net in range [0, net_count-1]
-/// @returns returns 0 if disabled, 1 if enabled
+/// @returns 0 if disabled, 1 if enabled
 /// @see Radio_ListCount, Radio_NetListCount
 VRCC_API int Radio_NetCryptoEnabled(int radio_index, int net_index);
 
@@ -538,9 +611,23 @@ VRCC_API int Radio_NetCryptoEnabled(int radio_index, int net_index);
 /// @details Freqhop nets will have a ::Radio_NetWaveform value of "HaveQuick" or "SINCGARS"
 /// @param radio_index index of radio in range [0, radio_count-1]
 /// @param net_index index of net in range [0, net_count-1]
-/// @returns returns net_id for freqhop-enabled net, 0 otherwise
+/// @returns net_id for freqhop-enabled net, 0 otherwise
 /// @see Radio_ListCount, Radio_NetListCount, Radio_NetWaveform
 VRCC_API int Radio_NetFreqHopNetId(int radio_index, int net_index);
+
+/// @brief Gets the SATCOM channel of the radio's net
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @param net_index index of net in range [0, net_count-1]
+/// @returns SATCOM channel number
+/// @see Radio_ListCount, Radio_NetListCount
+VRCC_API int Radio_NetSatcomChannel(int radio_index, int net_index);
+
+/// @brief Gets the tuning method of the radio's net
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @param net_index index of net in range [0, net_count-1]
+/// @returns net tuning method (AM/FM = 1, Intercom = 2, HAVEQUICK = 4, SINCGARS = 5)
+/// @see Radio_ListCount, Radio_NetListCount
+VRCC_API int Radio_NetTuningMethod(int radio_index, int net_index);
 
 /// @brief Gets the unique ID of currently selected net for a radio
 /// @param radio_index index of radio in range [0, radio_count-1]
@@ -661,19 +748,37 @@ VRCC_API float Radio_VolumeStereoRight(int radio_index);
 /// @see Radio_ListCount
 VRCC_API int Radio_IsNetLocked(int radio_index);
 
-/// @brief Gets whether the RX/TX enables are locked for a radio
-/// @details When the RX/TX enables are locked, the receive and transmit
-/// enables cannot be changed by the client.  This configuration is set
+/// @brief Gets whether the RX enable is locked for a radio
+/// @details When the RX enable is locked, the receive
+/// enable cannot be changed by the client.  This configuration is set
 /// in the definition of a Role on the Voisus Server.
 /// @param radio_index index of radio in range [0, radio_count-1]
 /// @returns 1 for locked, 0 otherwise
-/// @see Radio_ListCount
+/// @see Radio_ListCount, Radio_IsTXModeLocked
 VRCC_API int Radio_IsRXModeLocked(int radio_index);
+
+/// @brief Gets whether the TX enable is locked for a radio
+/// @details When the TX enable is locked, the transmit
+/// enable cannot be changed by the client.  This configuration is set
+/// in the definition of a Role on the Voisus Server.
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @returns 1 for locked, 0 otherwise
+/// @see Radio_ListCount, Radio_IsRXModeLocked
+VRCC_API int Radio_IsTXModeLocked(int radio_index);
 
 /// @brief Gets the audio balance for a radio (left, right, center)
 /// @param radio_index index of radio in range [0, radio_count-1]
 /// @returns balance of type ::Balance_t
 VRCC_API int Radio_Balance(int radio_index);
+
+/// @brief Gets whether balance selection is locked for a radio
+/// @details When selection is locked, the balance cannot be changed
+/// by the client.  This configuration is set in the definition of a Role
+/// on the Voisus Server.
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @returns 1 for locked, 0 otherwise
+/// @see Radio_ListCount
+VRCC_API int Radio_BalanceLocked(int radio_index);
 
 /// @brief Gets the type of radio (e.g. URC-200)
 /// @details Used when displaying a radio that is meant to simulate a
@@ -704,6 +809,15 @@ VRCC_API int Radio_PTT(int radio_index);
 /// @returns 32-character unique ID of radio effects, or empty string
 VRCC_API const char* Radio_RadioEffects(int radio_index);
 
+/// @brief Gets whether radio effects selection is locked for a radio
+/// @details When selection is locked, the radio effects cannot be changed
+/// by the client.  This configuration is set in the definition of a Role
+/// on the Voisus Server.
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @returns 1 for locked, 0 otherwise
+/// @see Radio_ListCount
+VRCC_API int Radio_RadioEffectsLocked(int radio_index);
+
 /// @brief Gets the Radio Control Id of a radio configured to control live radios
 /// @param radio_index index of radio in range [0, radio_count-1]
 /// @returns 32-character unique ID of radio control, or empty string
@@ -730,6 +844,27 @@ VRCC_API int Radio_AudioLevelEnabled(int radio_index);
 /// @param enable 1 for enable, 0 for disable
 /// @see Radio_ListCount, Radio_AudioLevelEnabled
 VRCC_API void Radio_SetAudioLevelEnable(int radio_index, int enable);
+
+/// @brief Enables or disables background playsound mixed into mic audio for this radio
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @param playsound_id 32-character unique ID of playsound to enable, or empty string to disable
+/// @see Radio_ListCount, Playsound_Id
+VRCC_API void Radio_SetPlaysound(int radio_index, const char* playsound_id);
+
+/// @brief Gets the unique ID of sound mixed into mic audio for this radio
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @returns 32-character unique ID of the background playsound, or empty string
+/// @see Radio_ListCount, Radio_SetPlaysound, Playsound_Id
+VRCC_API const char* Radio_Playsound(int radio_index);
+
+/// @brief Gets whether background playsound selection is locked for a radio
+/// @details When selection is locked, the playsound cannot be changed
+/// by the client.  This configuration is set in the definition of a Role
+/// on the Voisus Server.
+/// @param radio_index index of radio in range [0, radio_count-1]
+/// @returns 1 for locked, 0 otherwise
+/// @see Radio_ListCount
+VRCC_API int Radio_PlaysoundLocked(int radio_index);
 
 /// @brief Writes a message to the Voisus client log
 /// @details The message will be logged as "<function> : <msg>".  See the
@@ -851,6 +986,7 @@ VRCC_API void Call_ReleaseLock();
 
 /// @brief Create a new call and join it
 /// @details For more information, see documentation on \ref calls.
+/// @note This function is blocking and waits for a response before returning.
 /// @returns 32-character unique ID of call
 /// @see Call_Invite, Phone_SetCall
 VRCC_API const char* Call_Create();
@@ -878,12 +1014,11 @@ VRCC_API void Call_InviteCrew();
 
 /// @brief Get the first call in set of calls for this endpoint
 /// @returns 32-character unique ID of call, or empty string if none
-/// @see Call_GetLock
 VRCC_API const char* Call_IDFirst();
 
 /// @brief Get the next call in set of calls for this endpoint
 /// @returns 32-character unique ID of call, or empty string if none
-/// @see Call_GetLock, Call_IDFirst
+/// @see Call_IDFirst
 VRCC_API const char* Call_IDNext();
 
 /// @brief Get the size of the set of calls for this endpoint
@@ -892,18 +1027,16 @@ VRCC_API int Call_ListCount();
 
 /// @brief Gets the version count for call and endpoint updates
 /// @details This counter increments when any Call or Endpoint information is updated
-/// @details provided updates are not locked due to ::Call_GetLock.
 /// @returns count of updates
 VRCC_API int Call_Endpoint_Version();
 
 /// @brief Get the first Endpoint for a call
 /// @returns 32-character unique ID of endpoint, or empty string if none
-/// @see Call_GetLock
 VRCC_API const char* Call_Endpoint_IDFirst(const char* call_id);
 
 /// @brief Get the next Endpoint for a call
 /// @returns 32-character unique ID of endpoint, or empty string if none
-/// @see Call_GetLock, Call_Endpoint_IDFirst
+/// @see Call_Endpoint_IDFirst
 VRCC_API const char* Call_Endpoint_IDNext(const char* call_id);
 
 /// @brief Get the current state of an Endpoint on a call
@@ -911,12 +1044,11 @@ VRCC_API const char* Call_Endpoint_IDNext(const char* call_id);
 /// @param call_id 32-character unique ID of call
 /// @param ep_id 32-character unique ID of endpoint
 /// @returns state of type ::CallProgress_t
-/// @see Call_GetLock, Call_Endpoint_IDFirst
+/// @see Call_Endpoint_IDFirst
 VRCC_API int Call_Endpoint_State(const char* call_id, const char* ep_id);
 
 /// @brief Gets the version count for call invitation updates
 /// @details This counter increments when any invitation is added
-/// @details provided updates are not locked due to ::Call_GetLock.
 /// @returns count of updates
 VRCC_API int Call_Invitation_Version();
 
@@ -924,20 +1056,18 @@ VRCC_API int Call_Invitation_Version();
 /// @details Invitations will remain until cleared with ::Call_Invitation_ClearAll
 /// @param invite pointer to structure of type ::CallInvitation_t (for return value)
 /// @returns 1 if invitation found, 0 otherwise
-/// @see Call_GetLock
 VRCC_API int Call_Invitation_First(CallInvitation_t* invite);
 
 /// @brief Get the next Invitation from list
 /// @details Invitations will remain until cleared with ::Call_Invitation_ClearAll
 /// @param invite pointer to structure of type ::CallInvitation_t (for return value)
 /// @returns 1 if invitation found, 0 otherwise
-/// @see Call_GetLock, Call_Invitation_First
+/// @see Call_Invitation_First
 VRCC_API int Call_Invitation_Next(CallInvitation_t* invite);
 
 /// @brief Clear all invitations from list
 /// @details This method should be called after all invitations in the list are read.
 /// @details Invitations are one-way notifications without state and will not time out.
-/// @see Call_GetLock
 VRCC_API void Call_Invitation_ClearAll();
 
 /// @brief Update current state of user Endpoint for a call
@@ -951,6 +1081,20 @@ VRCC_API void Call_Progress(const char* call_id, int call_state);
 /// @param call_id 32-character unique ID of call
 /// @param leave_reason reason of type ::CallLeave_t
 VRCC_API void Call_Leave(const char* call_id, int leave_reason);
+
+/// @brief Transmit a key press on a call
+/// @details Intended for sending DTMF tones on phone lines
+/// @param call_id 32-character unique ID of call
+/// @param keys string containing the keys to be pressed in sequence (e.g. "123#")
+VRCC_API void Call_PressKey(const char* call_id, const char* keys);
+
+/// @brief Request an endpoint to leave a call
+/// @details Intended for canceling call invitations.
+/// @details Only endpoints with call state of signaling will leave call.
+/// @details Endpoints in Connected and Holding states will ignore the request.
+/// @param call_id 32-character unique ID of call
+/// @param call_id 32-character unique ID of endpoint
+VRCC_API void Call_LeaveRequest(const char* call_id, const char* endpoint_id);
 
 /// @brief Get the count phones for this endpoint
 /// @details For more information, see documentation on \ref phones.
@@ -978,20 +1122,9 @@ VRCC_API void Phone_SetVolume(float volume);
 /// @brief Connects to a Voisus Cloud
 /// @details Initiates Voisus Client connection to specified server cloud.
 /// @param cloud_id Unique name of the cloud
+/// @note This function is blocking and waits for a response before returning.
 /// @see Network_ConnectState, Network_ConnectionStatus
 VRCC_API void Voisus_ConnectCloud(const char* cloud_id);
-
-/// @brief Gets the last set Cloud to connect to
-/// @returns Unique name of the cloud
-VRCC_API const char* Network_CloudSet();
-
-/// @brief Gets the currently connected Cloud
-/// @returns Unique name of the cloud
-VRCC_API const char* Network_CloudActive();
-
-/// @brief Get the current connection mode (e.g. Cloud)
-/// @returns mode of type ::ConnectionMode_t
-VRCC_API int Network_ConnectionMode();
 
 /// @brief Gets the lock on all Cloud data
 /// @warning This method is deprecated in VRCC 5.13.0 and above
@@ -1005,12 +1138,11 @@ VRCC_API void Cloud_ReleaseLock();
 
 /// @brief Get the first Cloud
 /// @returns 32-character unique ID of Cloud, or empty string if none
-/// @see Cloud_GetLock
 VRCC_API const char* Cloud_IDFirst();
 
 /// @brief Get the next Cloud
 /// @returns 32-character unique ID of Cloud, or empty string if none
-/// @see Cloud_GetLock, Cloud_IDFirst
+/// @see Cloud_IDFirst
 VRCC_API const char* Cloud_IDNext();
 
 /// @brief Gets the current number of detected clouds
@@ -1040,12 +1172,11 @@ VRCC_API void Operator_ReleaseLock();
 
 /// @brief Get the first Operator
 /// @returns 32-character unique ID of operator, or empty string if none
-/// @see Operator_GetLock
 VRCC_API const char* Operator_IDFirst();
 
 /// @brief Get the next Operator
 /// @returns 32-character unique ID of Operator, or empty string if none
-/// @see Operator_GetLock, Operator_IDFirst
+/// @see Operator_IDFirst
 VRCC_API const char* Operator_IDNext();
 
 /// @brief Gets the current number of Operators
@@ -1067,13 +1198,12 @@ VRCC_API int Operator_ListCount();
 /// @param uuid 32-character unique ID of Operator
 /// @param field_name name of field
 /// @returns field value, or empty string if field not found
-/// @see Operator_GetLock, Operator_IDFirst, Operator_IDNext
+/// @see Operator_IDFirst, Operator_IDNext
 VRCC_API const char* Operator_GetField(const char* uuid, const char* field_name);
 
 /// @brief Gets the version count for Operators
 /// @details This counter increments when any Operator information is
 /// updated, including operators added/removed or fields changed
-/// @details provided updates are not locked due to ::Operator_GetLock.
 /// @returns count of Operator updates
 VRCC_API int Operator_Version();
 
@@ -1226,6 +1356,11 @@ VRCC_API void AuxAudio_Send(unsigned char* samples, unsigned int len);
 /// @see AuxAudio_Enable, AuxAudio_Send
 VRCC_API void AuxAudio_Register(AudioCallback func);
 
+/// @brief Gets the version count for radio effects updates
+/// @details This counter increments when any radio effects information is updated.
+/// @returns count of radio effects updates
+VRCC_API int RadioEffects_Version();
+
 /// @brief Get the number of radio effects
 /// @returns count of radio effects
 VRCC_API int RadioEffects_ListCount();
@@ -1298,6 +1433,51 @@ VRCC_API void Jammer_SetNetID(int jammer_index, const char* net_id);
 /// @see Jammer_ListCount
 VRCC_API void Jammer_SetEnable(int jammer_index, int enable);
 
+/// @brief Start recording audio received by the jammer
+/// @details Recording will start when first audio is received and continue
+/// @details until stopped or recording length reaches specified duration
+/// @param jammer_index index of jammer in range [0, jammer_count-1]
+/// @param duration_secs Maximum duration of recording in range [1, 30]
+/// @see Jammer_ListCount
+VRCC_API void Jammer_StartRecording(int jammer_index, int duration_secs);
+
+/// @brief Stop recording audio received by the jammer
+/// @param jammer_index index of jammer in range [0, jammer_count-1]
+/// @see Jammer_ListCount, Jammer_StartRecording
+VRCC_API void Jammer_StopRecording(int jammer_index);
+
+/// @brief Start transmitting previously recorded audio out the jammer
+/// @details Replay will start immediately and conclude when all audio is played
+/// @details (if loop == 0) or play continuously until stopped on a loop
+/// @details (if loop > 0)
+/// @param jammer_index index of jammer in range [0, jammer_count-1]
+/// @param loop 1 to enable looping playback, 0 to play once
+/// @see Jammer_ListCount
+VRCC_API void Jammer_StartReplaying(int jammer_index, int loop);
+
+/// @brief Stop transmitting previously recorded audio out the jammer
+/// @param jammer_index index of jammer in range [0, jammer_count-1]
+/// @see Jammer_ListCount, Jammer_StartReplaying
+VRCC_API void Jammer_StopReplaying(int jammer_index);
+
+/// @brief Get the current state of the jammer's record/replay functions
+/// @param jammer_index index of jammer in range [0, jammer_count-1]
+/// @returns State of type ::JammerRecordReplayState_t
+/// @see Jammer_ListCount
+VRCC_API int Jammer_RecordReplayState(int jammer_index);
+
+/// @brief Get the progress of an active recording or replaying
+/// @param jammer_index index of jammer in range [0, jammer_count-1]
+/// @returns Progress as a percentage of the maximum recording duration
+/// @see Jammer_ListCount, Jammer_StartRecording
+VRCC_API int Jammer_RecordReplayProgress(int jammer_index);
+
+/// @brief Get the duration of the last recording in milliseconds
+/// @param jammer_index index of jammer in range [0, jammer_count-1]
+/// @returns duration of last recording in milliseconds
+/// @see Jammer_ListCount
+VRCC_API int Jammer_RecordReplayDurationMs(int jammer_index);
+
 /// @brief Gets the unique ID of the active Playback audio device
 /// @details Playback devices are speakers and headsets
 /// @param type Type of audio device (playback/capture) of type ::AudioDeviceType_t
@@ -1337,6 +1517,7 @@ VRCC_API int AudioDevice_Version();
 /// @brief Request a new license of specified type
 /// @details Check status of license request (pending, granted, released or
 /// @details lost) with ::License_Status.
+/// @note This function is blocking and waits for a response before returning.
 /// @param type Type of license
 /// @returns Identifier for license request, -1 on error
 /// @see License_Status
@@ -1354,5 +1535,26 @@ VRCC_API void License_Release(int license_id);
 /// @returns License status of type ::LicenseStatus_t
 /// @see License_Request
 VRCC_API int License_Status(int license_id);
+
+/// @brief Gets the current number of Client Playsounds
+/// @returns number of playsounds
+VRCC_API int Playsound_ListCount(void);
+
+/// @brief Gets the name of a specified playsound
+/// @param playsound_id 32-character unique ID of playsound
+/// @returns name of Playsound, or empty string
+/// @see Playsound_ListCount
+VRCC_API const char* Playsound_Name(const char* playsound_id);
+
+/// @brief Gets the unique ID of a specified playsound
+/// @param playsound_index index of playsound in the range [0, count of playsounds - 1]
+/// @returns 32-character unique identifier of playsound, or empty string
+/// @see Playsound_ListCount
+VRCC_API const char* Playsound_Id(int playsound_index);
+
+/// @brief Gets the version count of Playsound updates
+/// @details This counter increments when playsound information is updated.
+/// @returns count of playsound updates
+VRCC_API int Playsound_Version(void);
 
 #endif

@@ -35,28 +35,38 @@
     #include <unistd.h>
 #endif
 
-using namespace std;
-
 ///////////////////////////////////////////////////////////////////////////////
 // Definitions
 ///////////////////////////////////////////////////////////////////////////////
 
 int Current_radio;
+int Current_jammer;
 
 void connect(void);
 void disconnect(void);
 void help(void);
 void get_radio(void);
+void get_jammer(void);
 void get_radio_nets(void);
+void get_jammer_nets(void);
 void get_radios(void);
+void get_jammers(void);
 void get_roles(void);
 void set_client_name(void);
 void set_ptt(void);
 void set_radio(void);
+void set_jammer(void);
 void set_radio_net(void);
+void set_jammer_net(void);
 void set_role(void);
+void set_jammer_enable(void);
 void set_rx_enable(void);
 void set_tx_enable(void);
+void jammer_set_enable(void);
+void jammer_start_recording(void);
+void jammer_start_replaying(void);
+void jammer_stop_recording(void);
+void jammer_stop_replaying(void);
 void quit_app(void);
 void status(void);
 
@@ -72,16 +82,26 @@ COMMAND_T Commands[] = {{"connect", "Connect to server", connect},
                         {"disconnect", "Disconnect from server", disconnect},
                         {"help", "Print the command descriptions", help},
                         {"get_radio", "Get current radio info", get_radio},
+                        {"get_jammer", "Get current jammer info", get_jammer},
                         {"get_radio_nets", "Get nets assigned to current radio", get_radio_nets},
+                        {"get_jammer_nets", "Get nets assigned to current jammer", get_jammer_nets},
                         {"get_radios", "Get info on all radios", get_radios},
+                        {"get_jammers", "Get info on all jammers", get_jammers},
                         {"get_roles", "Get list of roles", get_roles},
                         {"set_client_name", "Set client name", set_client_name},
                         {"set_ptt", "Set PTT state (pressed or released)", set_ptt},
                         {"set_radio", "Set the current radio by index", set_radio},
+                        {"set_jammer", "Set the current jammer by index", set_jammer},
                         {"set_radio_net", "Set the net for a radio by index", set_radio_net},
+                        {"set_jammer_net", "Set the net for a jammer by index", set_jammer_net},
                         {"set_role", "Set the role to use", set_role},
+                        {"set_jammer_enable", "Set transmit enable for current jammer", set_jammer_enable},
                         {"set_rx_enable", "Set receive enable for current radio", set_rx_enable},
                         {"set_tx_enable", "Set transmit enable for current radio", set_tx_enable},
+                        {"jammer_start_recording", "Begin recording on current jammer", jammer_start_recording},
+                        {"jammer_start_replaying", "Begin replaying on current jammer", jammer_start_replaying},
+                        {"jammer_stop_recording", "Stop recording on current jammer", jammer_stop_recording},
+                        {"jammer_stop_replaying", "Stop replaying on current jammer", jammer_stop_replaying},
                         {"quit", "Quit the application", quit_app},
                         {"status", "Get the current status", status},
                         {NULL, NULL, NULL}};
@@ -160,6 +180,46 @@ void print_radio(int idx)
            Radio_IsTransmitting(idx) ? "true" : "false");
 }
 
+const char* jammer_state(int state)
+{
+    switch (state)
+    {   case JAMMER_STATE_INIT:
+            return "Jammer Initialized";
+        case JAMMER_STATE_WAITING:
+            return "Jammer Waiting For Audio";
+        case JAMMER_STATE_RECORDING:
+            return "Jammer Recording Audio";
+        case JAMMER_STATE_REPLAYING:
+            return "Jammer Replaying Audio";
+        case JAMMER_STATE_IDLE:
+            return "Jammer Ready With Audio";
+        default:
+            return NULL;
+    }
+}
+
+void print_jammer(int idx)
+{
+    int active_net_idx;
+    for (active_net_idx = 0; active_net_idx < Jammer_NetListCount(Current_jammer); active_net_idx++)
+    {   if (!strcmp(Jammer_NetID(Current_jammer, active_net_idx), Jammer_NetIDActive(Current_jammer)))
+            break;
+    }
+    printf("Jammer index %d:%s\n"
+           "    Active Net Name: %s\n"
+           "    Transmitting: %s\n"
+           "    Record/Replay State: %s\n"
+           "    Replay Progress: %d%%\n"
+           "    Replay Duration: %d ms\n",
+           idx,
+           (idx == Current_jammer) ? "(*** Current ***)" : "",
+           Jammer_NetName(Current_jammer, active_net_idx),
+           Jammer_IsTransmitting(idx) ? "true":"false",
+           jammer_state(Jammer_RecordReplayState(idx)),
+           Jammer_RecordReplayProgress(idx),
+           Jammer_RecordReplayDurationMs(idx));
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Commands
 ///////////////////////////////////////////////////////////////////////////////
@@ -193,6 +253,12 @@ void get_radio(void)
         print_radio(Current_radio);
 }
 
+void get_jammer(void)
+{
+    if (Current_jammer < Jammer_ListCount())
+        print_jammer(Current_jammer);
+}
+
 void get_radio_nets(void)
 {
     printf("Nets assigned to Radio %d:\n", Current_radio);
@@ -213,10 +279,33 @@ void get_radio_nets(void)
     }
 }
 
+void get_jammer_nets(void)
+{
+    printf("Nets assigned to Jammer %d:\n", Current_jammer);
+    for (int i = 0; i < Jammer_NetListCount(Current_jammer); i++)
+    {   int current_net = !strcmp(Jammer_NetID(Current_jammer, i),
+                                  Jammer_NetIDActive(Current_jammer));
+        printf("Net index %d:%s\n"
+               "    Name: %s\n"
+               "    Net ID: %s\n",
+               i,
+               current_net ? " (*** Current ***)" : "",
+               Jammer_NetName(Current_jammer, i),
+               Jammer_NetID(Current_jammer, i)
+               );
+    }
+}
+
 void get_radios(void)
 {
     for (int i = 0; i < Radio_ListCount(); i++)
         print_radio(i);
+}
+
+void get_jammers(void)
+{
+    for (int i = 0; i < Jammer_ListCount(); i++)
+        print_jammer(i);
 }
 
 void get_roles(void)
@@ -256,6 +345,21 @@ void set_radio(void)
         printf("Bad radio index. Current radio index is %d.\n", Current_radio);
 }
 
+void set_jammer(void)
+{
+    char idxstr[32];
+    printf("Enter jammer number (see: get_jammers): ");
+    fflush(stdout);
+    get_input(idxstr, sizeof(idxstr));
+    int idx = atoi(idxstr);
+    if (idx < Jammer_ListCount())
+    {   Current_jammer = idx;
+        get_jammers();
+    }
+    else
+        printf("Bad jammer index. Current jammer index is %d.\n", Current_jammer);
+}
+
 void set_radio_net(void)
 {
     char idxstr[32];
@@ -269,6 +373,25 @@ void set_radio_net(void)
     int idx = atoi(idxstr);
     if (idx < Radio_NetListCount(Current_radio))
         Radio_SetNet(Current_radio, idx);
+    else
+        printf("Bad net index.\n");
+}
+
+void set_jammer_net(void)
+{
+    char idxstr[32];
+    if (0 == Jammer_ListCount())
+    {   printf("No jammers.");
+        return;
+    }
+    printf("Enter net number (see: get_jammer_nets): ");
+    fflush(stdout);
+    get_input(idxstr, sizeof(idxstr));
+    int idx = atoi(idxstr);
+    if (idx < Jammer_NetListCount(Current_jammer))
+    {   const char* netID = Jammer_NetID(Current_jammer, idx);
+        Jammer_SetNetID(Current_jammer, netID);
+    }
     else
         printf("Bad net index.\n");
 }
@@ -288,6 +411,24 @@ void set_role(void)
     else
         printf("Unknown role.\n");
 }
+
+void set_jammer_enable(void)
+{
+    char enablestr[32];
+    printf("Enter 'enable' to enable the selected jammer, or 'disable' to disable the selected jammer: ");
+    fflush(stdout);
+    get_input(enablestr, sizeof(enablestr));
+    if (0 == strcmp(enablestr, "enable"))
+    {   Jammer_SetEnable(Current_jammer, 1);
+        printf("Jammer %d enabled\n", Current_jammer);
+    }
+    else if (0 == strcmp(enablestr, "disable"))
+    {   Jammer_SetEnable(Current_jammer, 0);
+        printf("Jammer %d disabled\n", Current_jammer);
+    }else
+        printf("Invalid entry\n");
+}
+
 
 void set_rx_enable(void)
 {
@@ -309,6 +450,44 @@ void set_tx_enable(void)
            Radio_IsTransmitEnabled(Current_radio) ? "Disabled" : "Enabled");
     Radio_SetTransmitEnabled(Current_radio,
                              !Radio_IsTransmitEnabled(Current_radio));
+}
+
+void jammer_start_recording(void)
+{
+    printf("Enter how long (in seconds) you'd like to record.(Max 30 Seconds): ");
+    char timestr[32];
+    fflush(stdout);
+    get_input(timestr, sizeof(timestr));
+    int time = atoi(timestr);
+    if (time > 30 || time < 0)
+    {   printf("Invalid entry\n");
+        return;
+    }
+    Jammer_StartRecording(Current_jammer, time);
+}
+
+void jammer_stop_recording(void)
+{
+    Jammer_StopRecording(Current_jammer);
+}
+
+void jammer_start_replaying(void)
+{
+    printf("Enter 'loop' to loop recording, or 'play' to play normally: ");
+    char optstr[32];
+    fflush(stdout);
+    get_input(optstr, sizeof(optstr));
+    if (0 == strcmp(optstr, "loop"))
+        Jammer_StartReplaying(Current_jammer, 1);
+    else if (0 == strcmp(optstr, "play"))
+        Jammer_StartReplaying(Current_jammer, 0);
+    else
+        printf("Invalid entry\n");
+}
+
+void jammer_stop_replaying(void)
+{
+    Jammer_StopReplaying(Current_jammer);
 }
 
 void quit_app(void)
@@ -345,8 +524,8 @@ int input_available()
 #else
     HANDLE eventHandles[] = {GetStdHandle(STD_INPUT_HANDLE)};
     DWORD result = WSAWaitForMultipleEvents(1, eventHandles, FALSE, 0, TRUE);
-    switch (result) {
-        case WSA_WAIT_EVENT_0:  // event on stdin
+    switch (result)
+    {   case WSA_WAIT_EVENT_0:  // event on stdin
             return 1;
         case WSA_WAIT_TIMEOUT:  // no events
         default:
