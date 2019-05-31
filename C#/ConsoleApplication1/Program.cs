@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,6 +22,7 @@ namespace ConsoleApplication
     class Program
     {
         static int currentRadio;
+		static int currentJammer;
 
         static void auxaudio_callback(IntPtr left_bytes, int left_len, int left_samples,
                                       IntPtr right_bytes, int right_len, int right_samples)
@@ -136,11 +137,24 @@ namespace ConsoleApplication
                 Console.WriteLine();
             }
         }
+        
+		public static void get_jammers(String parameters)
+		{	
+			Console.WriteLine("\"Current\" Jammer Index: " + currentJammer);
+			for (int i = 0; i < VRCC.Jammer_ListCount(); ++i)
+			{		
+				Console.Write("Jammer Index " + i + ": ");
+				Console.Write(" Active Net: " + Jammer_NetNameActive(i));
+				Console.Write(" Transmitting: " + Convert.ToBoolean(VRCC.Jammer_IsTransmitting(i)));
+				Console.Write(" Record/Replay State: " + ReplayState(VRCC.Jammer_RecordReplayState(i)));
+                Console.WriteLine();
+			}
+		}
 
         public static void cycle_radio(String parameters)
         {
             ++currentRadio;
-            if (currentRadio > VRCC.Radio_ListCount()) currentRadio = 0;
+            if (currentRadio >= VRCC.Radio_ListCount()) currentRadio = 0;
             Console.WriteLine("\"Current\" Radio Index: " + currentRadio);
             Console.Write(" Active Net: " + VRCC.Radio_NetNameActive(currentRadio));
             Console.Write(" Transmit Enabled: " + Convert.ToBoolean(VRCC.Radio_IsTransmitEnabled(currentRadio)));
@@ -148,9 +162,20 @@ namespace ConsoleApplication
             Console.WriteLine();
         }
 
+		public static void cycle_jammer(String parameters)
+		{
+			++currentJammer;
+            if (currentJammer >= VRCC.Jammer_ListCount()) currentJammer = 0;
+			Console.WriteLine("\"Current\" Jammer Index: " + currentJammer);
+			Console.Write(" Active Net: " + Jammer_NetNameActive(currentJammer));
+			Console.Write(" Transmitting: " + Convert.ToBoolean(VRCC.Jammer_IsTransmitting(currentJammer)));
+			Console.Write(" Record/Replay State: " + ReplayState(VRCC.Jammer_RecordReplayState(currentJammer)));
+			Console.WriteLine();
+		}
+
         public static void get_nets(String parameters)
         {
-            Console.WriteLine("Available Nets on Radio " + currentRadio + " :");
+            Console.WriteLine("Available Nets on Radio " + currentRadio + ": ");
             for(int i = 0; i < VRCC.Radio_NetListCount(currentRadio); ++i)
             {
                 Console.WriteLine(VRCC.Radio_NetRxFrequencyActive(currentRadio));
@@ -161,6 +186,20 @@ namespace ConsoleApplication
                 Console.WriteLine();
             }
         }
+
+		public static void get_jammer_nets(String parameters)
+		{
+            Console.WriteLine("Active Net Name: " + Jammer_NetNameActive(currentJammer));
+			Console.WriteLine("Active Net ID: " + VRCC.Jammer_NetIDActive(currentJammer));
+			Console.WriteLine("Available Nets on Jammer " + currentJammer + ": ");
+            for (int i = 0; i < VRCC.Jammer_NetListCount(currentJammer); i++)
+			{
+				Console.Write("Net Index: " + i);
+				Console.Write(" Net Name: " + VRCC.Jammer_NetName(currentJammer, i));
+				Console.Write(" Net ID: " + VRCC.Jammer_NetID(currentJammer, i));
+                Console.WriteLine();
+			}	
+		}
 
         public static void set_net(String net_index)
         {
@@ -188,6 +227,110 @@ namespace ConsoleApplication
             Console.WriteLine("Net ID: " + VRCC.Radio_NetID(currentRadio, index));
             Console.Write(" Active Net: " + VRCC.Radio_NetNameActive(currentRadio));
         }
+
+		public static void set_jammer_net(String net_index)
+		{
+			if(net_index == null || net_index == "")
+			{
+				Console.WriteLine("Specify a net by its Index");
+				Console.WriteLine();
+				get_jammer_nets(null);
+				Console.WriteLine();
+				Console.Write("> ");
+				net_index = Console.ReadLine();
+			}
+			Int32 index = new Int32();
+			try
+			{
+				index = Convert.ToInt32(net_index);
+			}
+			catch
+			{
+				Console.WriteLine("Invalid argument: must be an integer corresponding to a Net Index");
+                return;
+			}
+			String stringid = VRCC.Jammer_NetID(currentJammer, index);
+			VRCC.Jammer_SetNetID(currentJammer, stringid);
+            Console.WriteLine("\"Current\" Jammer Index: " + currentJammer);
+            Console.WriteLine(" Active Net ID: " + VRCC.Jammer_NetID(currentJammer, index));
+            
+		}
+
+		public static void set_jammer_enable(String parameters)
+        {
+			Console.WriteLine("Enter \"enable\", or \"disable\"");
+			Console.WriteLine();
+			Console.Write("> ");
+			String enabler = Console.ReadLine();
+			if (enabler == "enable")
+			{
+				VRCC.Jammer_SetEnable(currentJammer, 1);
+			}
+			else if (enabler == "disable")
+			{
+				VRCC.Jammer_SetEnable(currentJammer, 0);
+			}
+			else
+			{
+				Console.WriteLine("Invalid entry: must be \"enable\", or \"disable\"");
+				return;
+			}
+		}
+
+		public static void jammer_start_recording(String parameters)
+        {
+			Console.WriteLine("Enter how long (in seconds) you'd like to record. (Max 30 Seconds)");
+			Console.WriteLine();
+			Console.Write("> ");
+			String timecount = Console.ReadLine();
+			Int32 time = new Int32();
+			try
+			{
+				time = Convert.ToInt32(timecount);
+			}
+			catch
+			{
+				Console.WriteLine("Invalid Entry");
+				return;
+			}
+			if (time > 30 || time < 0)
+			{
+				Console.WriteLine("Invalid Entry");
+				return;
+			}
+			VRCC.Jammer_StartRecording(currentJammer, time);
+
+		}
+
+		public static void jammer_stop_recording(String parameters)
+        {
+			VRCC.Jammer_StopRecording(currentJammer);
+		}
+
+		public static void jammer_start_replaying(String parameters)
+        {
+			Console.WriteLine("Enter \"loop\" to loop recording, or \"play\" to play normally: ");
+			Console.WriteLine();
+			Console.Write("> ");
+			String looped = Console.ReadLine();
+			if (looped == "loop")
+			{
+				VRCC.Jammer_StartReplaying(currentJammer, 1);
+			}
+			else if (looped == "play")
+			{
+				VRCC.Jammer_StartReplaying(currentJammer, 0);
+			}
+			else
+			{
+				Console.WriteLine("Invalid entry");
+			}
+		}
+
+		public static void jammer_stop_replaying(String parameters)
+        {
+			VRCC.Jammer_StopReplaying(currentJammer);
+		}
 
         public static void get_stats(String parameters)
         {
@@ -414,7 +557,37 @@ namespace ConsoleApplication
             Console.WriteLine("If you're not sure what argument to supply to a command, call it with no arguments to receive usage info");
         }
 
-        
+        private static String Jammer_NetNameActive(int jammer_index)
+        {
+            //Helper function
+            int active_net_idx;
+            for (active_net_idx = 0; active_net_idx < VRCC.Jammer_NetListCount(jammer_index); active_net_idx++)
+            {
+                if (VRCC.Jammer_NetID(jammer_index, active_net_idx) == VRCC.Jammer_NetIDActive(jammer_index))
+                    break;
+            }
+            return VRCC.Jammer_NetName(jammer_index, active_net_idx);
+        }
+        private static String ReplayState(int state)
+        {
+            //Helper function
+            switch (state)
+            {
+                case 1:
+                    return "Jammer Initialized";
+                case 2:
+                    return "Jammer Waiting For Audio";
+                case 3:
+                    return "Jammer Recording Audio";
+                case 4:
+                    return "Jammer Replaying Audio";
+                case 5:
+                    return "Jammer Ready With Audio";
+                default:
+                    return "Invalid State";
+            }
+        }
+
         delegate void command(String parameters = null);
 
         static MethodInfo[] methodInfos = typeof(Program).GetMethods();

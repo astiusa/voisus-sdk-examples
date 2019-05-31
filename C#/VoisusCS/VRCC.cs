@@ -1,4 +1,4 @@
-﻿namespace VoisusCS
+namespace VoisusCS
 {
 
     using System;
@@ -93,7 +93,12 @@
         extern unsafe static sbyte* Radio_NetIDActive_Unsafe(int radio_index);
         [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "Radio_Type")]
         extern unsafe static sbyte* Radio_Type_Unsafe(int radio_index);
-
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "Jammer_NetID")]
+        extern unsafe static sbyte* Jammer_NetID_Unsafe(int jammer_index, int net_index);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "Jammer_NetIDActive")]
+        extern unsafe static sbyte* Jammer_NetIDActive_Unsafe(int jammer_index);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "Jammer_NetName")]
+        extern unsafe static sbyte* Jammer_NetName_Unsafe(int jammer_index, int net_index);
         [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "Joystick_Name")]
         extern unsafe static sbyte* Joystick_Name_Unsafe (int list_index);
        
@@ -405,6 +410,33 @@
         public extern static void AuxAudio_Enable (int enable, int sample_rate, int encoding);
         [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
         public extern static void AuxAudio_Register (IntPtr callback);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static int Jammer_Version();
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static int Jammer_ListCount();
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static int Jammer_NetListCount(int jammer_index);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static int Jammer_IsTransmitting(int jammer_index);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static void Jammer_SetNetID(int jammer_index, String net_id);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static void Jammer_SetEnable(int jammer_index, int enable);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static void Jammer_StartRecording(int jammer_index, int duration_secs);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static void Jammer_StopRecording(int jammer_index);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static void Jammer_StartReplaying(int jammer_index, int loop);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static void Jammer_StopReplaying(int jammer_index);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static int Jammer_RecordReplayState(int jammer_index);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static int Jammer_RecordReplayProgress(int jammer_index);
+        [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
+        public extern static int Jammer_RecordReplayDurationMs(int jammer_index);
+
 
         #endregion public
 
@@ -534,7 +566,18 @@
         {
             unsafe { return new String(EntityState_IdSet_Unsafe()); }
         }
-
+        public static String Jammer_NetID (int jammer_index, int net_index)
+        {
+            unsafe { return new String(Jammer_NetID_Unsafe(jammer_index, net_index)); }
+        }
+        public static String Jammer_NetIDActive(int jammer_index)
+        {
+            unsafe { return new String(Jammer_NetIDActive_Unsafe(jammer_index)); }
+        }
+        public static String Jammer_NetName(int jammer_index, int net_index)
+        {
+            unsafe { return new String(Jammer_NetName_Unsafe(jammer_index, net_index)); }
+        }
         public static String Radio_NetName (int radio_index, int net_index)
         {
             unsafe { return new String(Radio_NetName_Unsafe(radio_index, net_index)); }
