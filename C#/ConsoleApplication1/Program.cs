@@ -22,7 +22,7 @@ namespace ConsoleApplication
     class Program
     {
         static int currentRadio;
-		static int currentJammer;
+        static int currentJammer;
 
         static void auxaudio_callback(IntPtr left_bytes, int left_len, int left_samples,
                                       IntPtr right_bytes, int right_len, int right_samples)
