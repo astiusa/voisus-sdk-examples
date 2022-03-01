@@ -14,20 +14,21 @@ Included here is source code for a console application that uses the Voisus Clie
 
 ### Windows
 
- * First install the Original Desktop Client for Windows (downloadable from Voisus Server)
- * Install CMake to generate Visual Studio solution (from https://cmake.org/download/)
- * Run CMake GUI from start menu
-   * Select the C++ directory as source directory and a new directory as build directory
-   * Configure and generate the solution
- * Open Visual Studio solution voisus-sdk-example created in build directory
- * Copy the VRCClient.lib file into the build directory
- * Build the solution in Visual Studio
- * Copy VRCClient.dll from Original Desktop Client install directory (e.g. C:\Program Files (x86)\ASTi\VoisusClient) into the directory with voisus-sdk-example executable (i.e. Debug or Release in build dir).
- * Run the voisus-sdk-example executable
+ * First install the Original Desktop Client for Windows (downloadable from the Voisus Server)
+ * Install CMake to generate a Visual Studio solution (from https://cmake.org/download/)
+ * **Run the CMake GUI** from the start menu
+   * Select the `C++` directory as source directory and specify a new directory as build output directory
+   * **Configure** and **generate** the solution
+ * **Copy the VRCClient.lib file** from the Desktop Client installation (e.g. C:\Program Files (x86)\ASTi\VoisusClient\SDK\lib64) into the C++ directory
+ * **Copy the C header files** from the Desktop Client installation (e.g. C:\Program Files (x86)\ASTi\VoisusClient\SDK\include) into the C++ directory
+ * **Open the generated Visual Studio solution** named `voisus-sdk-example.sln` created in the build directory
+ * **Build the solution** in Visual Studio
+ * **Copy the VRCClient.dll file** from the Desktop Client installation (e.g. C:\Program Files (x86)\ASTi\VoisusClient\SDK\lib64) into the build output directory (i.e. Debug or Release in the build directory).
+ * **Run the voisus-sdk-example executable** in the output directory (Debug or Release)
 
 ## Using the Example
 
-To begin, you must have a Voisus server running a scenario that is configured with Roles and a Comm Plan. It may be helpful to first run the Original Desktop Client and connect to the server on your machine.
+To begin, you must have a Voisus server running a scenario that is configured with Roles and a Comm Plan. It may be helpful to first run the Original Desktop Client and connect to the server on your machine first.
 
 Here are some basic commands to run:
  * To connect the example application to the server, enter ```connect```. Then enter the IP address of the Voisus server.
