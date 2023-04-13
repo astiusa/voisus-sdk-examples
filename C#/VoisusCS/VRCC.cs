@@ -28,7 +28,7 @@ namespace VoisusCS
         /* These are functions which need redefinitions to be used externally without the safe keyword */
 
         [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl)]
-        extern static int VRCC_Start(int argc, ref IntPtr argv);
+        extern static int VRCC_Start(int argc, string[] argv);
 
         [DllImport("VRCClient.dll", CallingConvention = CallingConvention.Cdecl, EntryPoint = "Voisus_LogPath")]
         extern unsafe static sbyte* Voisus_LogPath_Unsafe ();
@@ -446,8 +446,8 @@ namespace VoisusCS
 
         public static void VRCC_Start()
         {
-            IntPtr argv = IntPtr.Zero;
-            if (VRCC_Start(0, ref argv) == 0)
+            string[] args = Environment.GetCommandLineArgs();
+            if (VRCC_Start(args.Length, args) == 0)
                 throw new VRCCException("VoisusMain.exe failed to start - verify that it's been installed correctly.");
             
         }
